@@ -1,0 +1,295 @@
+
+\chapter{Variational Inference}{\label{sec:variationalMethods}
+
+\section{Introduction}
+
+Need a systematic way to make inferences.
+
+This entails using probabilities to model our knowledge of the world.
+
+
+
+\section{Probability}
+
+Probability distributions can be used to represent our knowledge of the world.
+For example, the value of a  experimentally obtained variable will in general
+fluctuate around its average.  
+If different runs of the experiment are independent
+then the  distribution of obtained values fully describes the experiment.
+
+What is learned from a given experiment is then characterised with how the probability distributions
+that represent our knowledge change.
+If a hypothesis, $\H$, is that a set of experimental data, $\vx = \{x_n|n=1,\ldots,N\}$, should conform to a model with a set of parameters, $\vw = \{w_i| i=1,\ldots,I\}$,
+then our full knowledge of the system is given by the joint probability distribution
+\begin{align}
+  P\lr{\vx,\vw,\H}.
+  \label{eqn:fullJointDist}
+\end{align}
+Of greater importance than \eqnref{fullJointDist}, however,
+is to determine how our knowledge of the model changes when we collect the experimental data.
+This can be found from  \eqnref{fullJointDist} by splitting the joint distribution into its conditional probabilities.
+\begin{align}
+  P\lr{\vx,\vw,\H} = P\lr{\vw|\vx,\H}P\lr{\vx|\H}
+  =  P\lr{\vx|\vw,\H} P\lr{\vw|\H}.
+\end{align}
+from which it follows that 
+\begin{align}
+   P\lr{\vw|\vx,\H} =  \frac{P\lr{\vw|\vw,\H} P\lr{\vw|\H}}{P\lr{\vx|\H}}.
+  \label{eqn:BayesTheorem}
+\end{align}
+Equation \Eqnref{BayesTheorem} is Bayes Theorem.
+It states that the probability of the model's parameters, {\em given the data},
+can be determined from the probability of the data when the parameters are known, and the a  probability of parameters {\em before the data was known}.
+It describes exactly the process of inference.
+
+The term $P\lr{\vx|\vw,\H}$ is the likelihood function.
+It evaluates the degree to which the model with a given set of parameters agrees with the experimental data.
+If it is assumed that every data point is independent, and that each datum should agree with the prediction of the model, $t_n$, 
+to within Gaussian noise
+then the likelihood function would be,
+\begin{align}
+  P\lr{\vx|\vw,\H} = \prod_{n=1}^N \sqrt{\frac{\gamma}{2\pi}}e^{-0.5\gamma\lr{x_n-t_n}^2}.
+\end{align}
+The variable $\gamma$ is the precision - the inverse of the variance - and is one of the set $\{w_i\}$.
+
+The term $P\lr{\vw|\H}$ in \eqnref{BayesTheorem} is independent of the experimental data $\{x_n\}$.  
+It  represents our knowledge of the parameters before the experiment was carried out.
+It could be that the parameters are already known to great precision - 
+in which case the probability distribution would tend towards a delta function.
+Alternatively, it could that the a priori knowledge of the precision, say, 
+does not expend beyond the requirement that the precision is positive definite.
+In this case the prior distribution would be represented by a scale invariant positive definite distribution.
+One such example is the Gamma distribution,
+\begin{align}
+  P(\gamma|s,c) = \frac{1}{\Gamma(s)c}\lr{\frac{x}{s}}^{c-1}\exp\lr{-\frac{x}{s}},
+\label{eqn:Gamma}
+\end{align}
+in the limit such that $sc = 1$ and $c\rightarrow 0$ \cite{MacKay2003}.
+
+The hypothesis, $\H$,  encompasses all of the assumptions that go into the inference.
+These include the choice of the model that is fitted to the data, 
+the prior probabilities assigned to the model variables and the 
+the noise model described by the likelihood function.
+These assumptions are inevitable - they reflect our uncertainty 
+ prompts the experiment in the first place.
+However, 
+since many different hypotheses can be dreamed up,
+it is important to be able to be able to evaluate how each is supported by the experimental data.
+For this, Bayes Theorem can be applied a second time:
+the probability of the hypothesis, given the data, is
+\begin{align}
+P\lr{\H | \vx } = \frac{P\lr{\vx|H}P\lr{\H}}{P\lr{\vx}}.
+\label{eqn:BayesHyp}
+\end{align}
+Since the probability of the data, $P\lr{\vx}$, 
+is independent of the hypothesis
+it can be eliminated when comparing two hypotheses, $\H_1$ and $\H_2$,
+\begin{align}
+\frac{P\lr{\H_1 | \vx }}{P\lr{\H_2 | \vx }} = \frac{P\lr{\vx|\H_1}}{P\lr{\vx|\H_1}}\frac{P\lr{\H_2}}{P\lr{\H_2}}.
+\label{eqn:ModelCmp}
+\end{align}
+The second of the ratios on the right-hand-side of \eqnref{ModelCmp}
+give an opportunity, if desired, to prefer one model over another irrespectively of any data collected.
+The first quotient is determined from the experimental data.
+The term $P\lr{\vx|\H}$ is called the evidence and it is the partition function of  \eqnref{BayesHyp}.
+
+A model that is highly constrained will be inflexible in the range of predictions it can make,
+whereas a model that has many free parameters will be able to predict a vast number of possible outcomes.
+The more constrained model will therefore have a smaller set of likely outcomes,
+but each of these will have a much greater probability than the many possible outcomes of the less constrained model.
+The right-hand-side of \eqnref{ModelCmp} therefore directly and quantitively embodies Occan's razor,
+the rule of thumb that states that `simpler' models should be favoured over more complicated models.
+For a more detailed discussion of model comparison and Occan's razor see \cite[Chapter 28]{Mackay2003}.
+
+To evaluate the evidence the numerator in equation \eqnref{BayesTheorem} must be integrated over the entire parameter space,
+\begin{align}
+  P\lr{\vx|\H} = \int_\vw d\vw P\lr{\vw|\vw,\H} P\lr{\vw|\H}
+\end{align}
+In general this cannot be done analytically.
+However, it is often the case that the probability density tightly peaked about the maximum.
+In this case the evidence may be evaluated by approximating the peak with a Gaussian, which can be integrated.
+This is the saddle point approximation.
+Expanding the logarithm of the  unnormalised probability distribution, $P^\ast$, 
+around the maximum, $\vx_0$,
+gives
+\eq{
+  \ln P^\ast = \ln P^\ast(\vx_0) - \frac{1}{2}\lr{\vx-\vx_0}^T \vA\lr{\vx-\vx_0 }
+}
+where 
+\eq{
+\vA = A_{ij} = \frac{\d^2}{\d x_i\d x_j} \ln P^\ast(\vx_0)
+}
+is the Hessian matrix.
+The right-hand-side of equation \eqnref{BayesTheorem}  is therefore approximated by the multidimensional Gaussian
+\begin{align}
+   P\lr{\vw|\vx,\H} = P^\ast(\vx_0) \exp \lr{- \frac{1}{2}\lr{\vx-\vx_0}^T \vA\lr{\vx-\vx_0 }}
+\end{align}
+for which the normalisation constant, the evidence, is 
+\begin{align}
+   P^\ast(\vx_0) \sqrt{\frac{\lr{2\pi}^K}{\det \vA}}
+\end{align}
+
+\section{Variational Approach}
+
+Variational methods can be used to approximate a probability distribution, $P$, that is impossible to evaluate exactly, 
+with a probability distribution that is more maluable.
+The approximation is varied so that it matches the original distribution as closely as possible. 
+
+The amount of information that is lost when a distribution $Q$ is used in place of the distribution $P$ is measured by the relative entropy, 
+a quantity known as the  Kullback-Leibler divergence.
+%The Kullback Leibler divergence gives a measure of the similarity of two distributions,
+It is defined,
+\begin{align}
+\KLD{Q}{P} &= \int_\vH Q(\vH|\H) \log\frac{Q(\vH|\H)}{P(\vH|\vD,\H)} d\vH,
+\end{align}
+where $P$ and $Q$ are probability distributions that model a hypothesis, $\H$.
+$\vH$ is a set of unknown variables that form the model and $\vD$ is as set of known variables.
+From Gibbs inequality it follows that 
+\begin{align}
+\KLD{Q}{P} \ge 0
+\end{align}
+and equality is only when $P=Q$.
+That is, knowledge of the system is always lost when it is approximated.
+
+The Kullback-Leibler divergence will be minimised in two different ways in this thesis.
+The first is 
+\nlist{
+\item
+This property makes the Kullback-Leibler divergence a useful function minimise.
+Indeed, using $P(\vH,\vD|\H) = P(\vH|\vD,\H) P(\vD|\H)$, 
+we may write,
+\begin{align}
+  \KLD{Q}{P}  % &=\int_\vH Q(\vH) \log\frac{Q(\vH)}{P(\vH|\vD)} d\vH \\
+  &= \int_\vH Q(\vH|\H) \log\frac{Q(\vH|\H)}{P(\vH,\vD|\H)} d\vH  +  \log P(\vD|\H) \\
+  &= -S_Q - \int_\vH Q(\vH|\H) \log P(\vH,\vD|\H)  d\vH + \log P(\vD|\H)
+\end{align}
+where $S_Q = - \int_\vH Q(\vH|\H) \log Q(\vH|\H) d\vH$ is the entropy given the hypothesis%
+\footnote{
+\begin{quote}
+Consider, for example, a crystal of Rochelle salt.
+For one set of experiments on it, we work with temperature, pressure and volume.
+The entropy can therefore be expressed as some function $S_e(T,P)$.
+For another set of experiments on the same crystal,
+we work with temperature, the component $e_{xy}$ of the strain tensor,
+and the component $P_z$ of the electric polarisation;
+the entropy as found in these experiments is a function $S_e(T, e_{xy}, P_z)$.
+It is clearly meaningless to ask ``What is the entropy of the crystal?''
+unless we first specify the set of parameters which define its thermodynamic state.%
+
+One might reply that in each of the experiments cited, 
+we have used only part of the degrees of freedom of the system,
+and there is a ``true'' entropy which is a function of all these parameters simultaneously.
+However we can always introduce as many parameters as we please...
+There is no end to this search for the ultimate ``true'' entropy until we have reached the point where we control
+the location of each atom independently.
+But just at that point the notion of entropy collapses, and we are no longer talking thermodynamics!
+
+From this we see that entropy is an anthropomorphic concept,
+not only in the well known statistical sense that it measures the extent of human ignorance as to the microstate.
+{\em Even at the purely phenomenological level, entropy is an anthropomorphic concept.}
+For it is a property, not of the physical system,
+but of the particular experiments that you or I choose to perform on it.
+
+\flushright Edwin T. Jaynes\cite{Jaynes1965}
+\end{quote}
+}.
+Define the  cost function
+\begin{align}
+  \L =  \int_\vH Q(\vH) \log P(\vH,\vD) ) d\vH +S_Q  
+\end{align}
+From which it follows that
+\begin{align}
+  \L &=   \log P(\vD,\H) - \KLD{Q}{P} \\
+     &\le \log P(\vD,\H)
+\end{align}
+The probability of the model is 
+\begin{align}
+  P(\H, \vD) &=    \frac{P(\vD, \H) P(\H)}{P(\vD)}\\
+             &\le  \frac{\L(Q)P(\H)}{P(\vD)}
+\end{align}
+\item The second is
+}
+
+
+
+
+\section{Independent Components of the pulses}
+
+Assume differing bubble sources as independent components in bubble.
+
+\begin{align}
+\vx_t = \vA \vs_t
+\end{align}
+One model for this is a Gaussian
+\begin{align}
+  P(x_t| \Lambda) = \G(x_t; AS_t, \Lambda)
+\end{align}
+However,
+from the \figref{} it is seen that the Gaussian noise model is not good.
+A better alternative is to use Fourier decomposition,
+
+\begin{align}
+  \vx_\omega = \vA \vs_\omega
+\end{align}
+such that
+\begin{align}
+  P(\vx_\omega| \Lambda_\omega) = \G( \vx_\omega ; AS_\omega, \Lambda_\omega)
+\end{align}
+
+\begin{align}
+  P(\vH|\vD) = G(\vH)
+\end{align}
+\begin{align}
+\KLD{Q}{P} &= \int_\vH Q(\vH) \log\frac{Q(\vH)}{P(\vH|\vD)} d\vH \\
+  &= \int_\vH Q(\vH) \log\frac{Q(\vH)}{P(\vH,\vD)} d\vH  + \int_\vH Q(\vH) \log P(\vD) d\vH\\
+  &= \int_\vH Q(\vH) \log Q(\vH) d\vH - \int_\vH Q(\vH) \log Q(\vH) \log P(\vH,\vD) ) d\vH + \log P(\vD)
+\end{align}
+Bring cost function
+\begin{align}
+  \L =  \int_\vH Q(\vH) \log Q(\vH) \log P(\vH,\vD) ) d\vH - Q(\vH) \log Q(\vH) d\vH 
+\end{align}
+From which it follows that
+\begin{align}
+  \L &=   \log P(\vD,\H) - \KLD{Q}{P} \\
+     &\le \log P(\vD,\H)
+\end{align}
+The probability of the model is 
+\begin{align}
+  P(\H, \vD) &=    \frac{P(\vD, \H) P(\H)}{P(\vD)}
+             &\le  \frac{\L(Q)P(\H)}{P(\vD)}
+\end{align}
+
+
+\subsubsection{The model}
+\begin{align}
+  P(s_{m\omega}| \H) &= \sum_{c=1}^{N_c} \pi_{mc}\G(s_{m\omega};0,\beta_{\omega c})\\
+  P(\beta_{\omega c} &= \GammaDistr(\beta_{mc} ; b^{(\beta)}, c^{(\beta)})\\
+  P(\{\pi_{mc}\}_{c=1}^{N_c}|\H)  &= \Dirichlet\lr{ \{\pi_{mc}\}_{c=1}^{N_c} | c^{(\pi)}}
+\end{align}
+And mixture
+\begin{align}
+  P(A_{nm}|\H) &= \G(A_{nm}; 0,\alpha_m)\\
+  P(\alpha_m| \H) &= \GammaDistr(\alpha_m| b^{(\alpha)},c^{(alpha)})
+\end{align}
+and gamma
+\begin{align}
+  P(\Lambda_{\omega},\H) = \GammaDistr(\Lambda_\omega;b^{(\Lambda)},c^{(\Lambda)} )
+\end{align}
+
+Simplify the distribution
+\begin{align}
+Q\lr{\vs, \vA, \pi, \beta, \alpha, \Lambda} = Q\lr{s_{\omega m}}Q\lr{A_{nm}}Q\lr{\pi}Q\lr{\beta}Q\lr{\alpha}Q\lr{\Lambda}
+\end{align}
+
+\begin{align}
+  Q\lr{s_{nm}} = \G(s_{m \omega};\hat{s}_{m\omega}, \tilde{s}_{m\omega})\\
+  Q\lr{A_{nm}} = \G(A_{mn};\hat{A}_{mn}, \tilde{A}_{mn})\\
+  Q\lr{\beta_{mc}} = \Gamma(\beta_{mc};\hat{A}_{mn}, \tilde{A}_{mn})
+\end{align}
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "tshorrock_thesis"
+%%% End: 
