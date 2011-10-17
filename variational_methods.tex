@@ -129,6 +129,18 @@ for which the normalisation constant, the evidence, is
    P^\ast(\vx_0) \sqrt{\frac{\lr{2\pi}^K}{\det \vA}}
 \end{align}
 
+
+\subsection{Conjugate Exponential Variables}
+\begin{align}
+\ln P(X|Y) = \phi(Y) u(X) + f(X) + g(Y)
+\end{align}
+then conjugacy implies
+\begin{align}
+\ln P(W|X) = \tilde\phi(W) u(X) + h(W).
+\end{align}
+so that variable $X$ is treated the same.
+
+
 \section{Variational Approach}
 
 Variational methods can be used to approximate a probability distribution, $P$, that is impossible to evaluate exactly, 
@@ -154,6 +166,22 @@ That is, knowledge of the system is always lost when it is approximated.
 The Kullback-Leibler divergence will be minimised in two different ways in this thesis.
 The first is 
 \nlist{
+\item
+  Let 
+  \begin{align}
+    P = \frac{1}{Z} e^{-\beta \scalar{E} }
+  \end{align}
+  then
+  \begin{align}
+    \beta \tilde{F} &= \int Q(x) \ln \frac{Q(x)}{\exp\lr{-\beta \scalar{E} }} \\
+    &= \int Q(x) \ln \frac{Q(x)}{P} - \ln Z \\
+    &= \KLD{Q}{P} - \ln Z
+    &= \KLD{Q}{P} + F.
+  \end{align}
+  where $F \equiv  - \ln Z$ is the free energy and 
+  \begin{align}
+    Z = 
+  \end{align}
 \item
 This property makes the Kullback-Leibler divergence a useful function minimise.
 Indeed, using $P(\vH,\vD|\H) = P(\vH|\vD,\H) P(\vD|\H)$, 
@@ -207,8 +235,58 @@ The probability of the model is
   P(\H, \vD) &=    \frac{P(\vD, \H) P(\H)}{P(\vD)}\\
              &\le  \frac{\L(Q)P(\H)}{P(\vD)}
 \end{align}
-\item The second is
+Assuming that the variables are independent gives
+\begin{align}
+Q\lr{\vH} = \prod_n^N Q_n\lr{H_n}
+\end{align}
+where $Q_n$ is the independent distribution for the $n$th variable.
+Then 
+\begin{align}
+  \L&=  \int_\vH \prod_n^NQ_n(H_n) \log P(\vH,\vD) ) d\vH - \sum_n^N \int_\vH Q_n(H_n)  \log Q_n(H_n|\H) dH_n
+\end{align}
+Separating out the $j$th element gives
+\begin{align}
+  \L &= \int_\vH Q_j(H_j)\prod_{n\ne J}^NQ_n(H_n) \log P(\vH,\vD) ) d\vH + S_{Q_j} +  \sum_{n\ne j}^N S_{Q_{n}}
+   \\ &= \int_{H_j} Q_j(H_j) \multi{\log P(\vH,\vD)}{\prod_{i\ne j} Q_i\lr{H_i}} +S_{Q_j} +  \sum_{n\ne j}^N S_{Q_{n}}
+\end{align}
+Introducing
+\begin{align}
+  Q^\ast_j = \frac{1}{Z}e^{\multi{\log P(\vH,\vD)}{\prod_{i\ne j} Q_i{H_i}}}
+\end{align}
+gives
+\begin{align}
+\L &= \int_{H_j} Q_j(H_j) \log Q^\ast dH_j  +S_{Q_j} +  \sum_{n\ne j}^N S_{Q_{n}} - \log Z
+\\ &= \KLD{Q_j}{Q^\ast_j}  - \log Z -  \sum_{n\ne j}^N S_{Q_{n}} 
+\end{align}
+which is maximal with respect to $Q_j$ when $Q_j = Q^\ast_j$, and so the function is maximised when
+\begin{align}
+  \log Q^\ast = \multi{\log P(\vH,\vD)}{\prod_{i\ne j} Q_i\lr{H_i}}
+\end{align}
+ 
+Now 
+\begin{align}
+  P(X_1, X_2, \ldots, X_N) = \prod_i^N P(X_i|\parents{i})
+\end{align}
+ so 
+ \begin{align}
+ \ln Q^\ast_j(H_j) = \multi{\ln P\lr{H_j|\parents{j}} + \sum_{i \in  \children{j}} \ln P\lr{X_i| H_j, \coparents{j}}}{\sim Q(H_j)} + \const
+ \end{align}
+If conjugate exponential models then
+\begin{align}
+\ln Q^\ast_j(H_j) &= \multi{\phi(\parents{j}) u(H_j) + f(H_j) + g(\parents{j}) }{\sim Q(H_j)}
+\nonumber \\
+&+\multi{\sum_{i \in  \children{j}}  \tilde\phi(X_i,\coparents{j}) u(H_j) + h(X_i,\coparents{j})  }{\sim Q(H_j)} + \const\\
+&= \multi{\phi(\parents{j}) + \sum_{i \in  \children{j}}  \tilde\phi(X_i,\coparents{j}) }{\sim Q(H_j)} u(H_j)+ f(H_j)+\const
+\end{align}
+from which it follows that
+\begin{align}
+  \phi^\ast_j = \scalar{\phi(\parents{j})} + \sum_{i \in  \children{j}}  \scalar{\tilde\phi(X_i,\coparents{j}) }
+\end{align}
+where expectations are with respect to $Q$.
 }
+
+
+
 
 
 
@@ -287,9 +365,7 @@ Q\lr{\vs, \vA, \pi, \beta, \alpha, \Lambda} = Q\lr{s_{\omega m}}Q\lr{A_{nm}}Q\lr
   Q\lr{\beta_{mc}} = \Gamma(\beta_{mc};\hat{A}_{mn}, \tilde{A}_{mn})
 \end{align}
 
-
-
 %%% Local Variables: 
 %%% mode: latex
-%%% TeX-master: "tshorrock_thesis"
+%%% TeX-master: "../../tshorrock_thesis"
 %%% End: 
